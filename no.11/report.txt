@@ -1,0 +1,199 @@
+嶋村光太郎 05-211013
+
+問1
+
+考察
+
+　前回のスライドで出てきたancestorの定義は
+ancestor(X, Z) :- parent(X, Z).
+ancestor(X, Z) :- parent(X, Y), ancestor(Y, Z).
+である。この場合は、例えばancestor(kobo, iwao)と問い合わせしたときに
+parent(kobo, Y), ancestor(Y, iwao)と遷移し、続いてparent(kobo, Y)を満たす
+Yが探索された後に、Yに代入が行われた状態でancestor(Y, iwao)の評価が行われる。
+このようにして関係を木に見立てた時にXの位置から根の方向に向かって遡りつつ再帰的に
+条件を満たすZの要素を探索している。
+　今回のancestorの定義は以下の通りである。
+ancestor(X, Y) :- ancestor(Z, Y), parent(X, Z).
+ancestor(X, Y) :- parent(X, Y).
+この場合は、例えばancestor(kobo, iwao)と問い合わせしたときに
+ancestor(Z, iwao), parent(kobo, Z)と遷移し、続いてancestor(Z, iwao)を満たす
+Zの探索が行われる。この場合、スライド46ページのnatの例のように代入が繰り返されて
+無限ループしてしまう。端的に言うと、ancestor(X, Y) := ancestor(Z, Y)という記述が
+問題であり、ここで無限ループが起きてしまう。
+
+問2　動作例
+
+?- nat_list(X).
+X = [] ;
+X = [z] ;
+X = [z, z] ;
+X = [z, z, z] ;
+X = [z, z, z, z] ;
+X = [z, z, z, z, z] ;
+X = [z, z, z, z, z, z] ;
+X = [z, z, z, z, z, z, z] ;
+...... 
+
+考察
+
+　まず、nat_list([z, s(z), z])はtrueが返ってくる。また、nat_list([z, X])は
+nat_listを満たすXを返し続けている。これらは正しく動作している。続いて、nat_list(X)
+に関して考える。
+　nat_listのnat_list([N|X]) :- nat(N), nat_list(X).の定義から、nat_list(X)は
+nat_listを満たすXがリストの引数の数を増やす方向に増えていく。例えば、nat_list(X)は上記の
+動作例のような結果が返ってくる。ここで、nat_listはX = z, X = s(z), X = s(s(z)), ...のように
+Xの値を増やしたものも解として認められるが、nat_listの規則の定義と、prologが深さ優先探索であることから
+そのような解は導かれることはない。ここでは、nat_list(X)がリストの数を増やす方向に増えていく過程が無限に
+続いていくことを考慮している。
+　よって、上記の理由により、nat_list(X)は任意の解が有限時間に出力されることはなく、具体的にはX = [s(z)]等が出力されない
+ため、正しい動作をしていない。
+　
+　
+問3　動作例
+
+?- remove_nth(1, [a,b,c,d,e], A).
+A = [b, c, d, e] .
+
+?- remove_nth(2, [a,b,c,d,e], A).
+A = [a, c, d, e] .
+
+?- remove_nth(5, [a,b,c,d,e], A).
+A = [a, b, c, d] .
+
+
+?- insert_nth(1, o, [a,b,c,d,e], A).
+A = [a, o, b, c, d, e] .
+
+?- insert_nth(2, o, [a,b,c,d,e], A).
+A = [a, b, o, c, d, e] .
+
+?- insert_nth(5, o, [a,b,c,d,e], A).
+A = [a, b, c, d, e, o] .
+
+
+?- notend([x,x,x,x,x,x,x,x,x], em).
+false.
+
+?- notend([x,x,x,x,x,x,x,x,o], em).
+false.
+
+?- notend([x,x,x,x,x,x,x,x,em], em).
+true .
+
+
+?- next_turn(o, X).
+X = x.
+
+?- next_turn(x, X).
+X = o.
+
+
+?- check(o, [o, o, o, o, o, o, o, o, o]).
+true ;
+true ;
+true ;
+true ;
+true ;
+true ;
+true ;
+true.
+
+?- check(x, [x, x, x, x, x, x, x, x, o]).
+true ;
+true ;
+true ;
+true ;
+true.
+
+?- check(x, [o, x, x, o, x, o, x, o, o]).
+true.
+
+?- check(o, [o, x, x, o, x, o, x, o, o]).
+false.
+
+?- move1(o, [em, em, em, em, em, em, em, em, em], A, em).
+A = [o, em, em, em, em, em, em, em, em] .
+
+?- move1(o, [x, em, em, em, em, em, em, em, em], A, em).
+false.
+
+?- move2(o, [em, em, em, em, em, em, em, em, em], A, em).
+A = [em, o, em, em, em, em, em, em, em] .
+
+?- move2(o, [em, o, em, em, em, em, em, em, em], A, em).
+false.
+
+?- move9(o, [em, em, em, em, em, em, em, em, em], A, em).
+A = [em, em, em, em, em, em, em, em, o] .
+
+
+?- win(x, [o,o,x,x,x,o,em,em,o], em).
+true ;
+true ;
+false.
+
+?- win(o, [o,o,x,x,x,o,em,em,em], em).
+false.
+
+?- lose(x, [o,o,x,x,x,o,o,em,em], em).
+false.
+
+?- win(o, [x,x,o,o,o,x,em,em,em], em).
+true ;
+true ;
+false.
+
+
+?- judge.
+true.
+
+?- judge1.
+true ;
+true ;
+true ;
+false.
+
+?- judge2.
+true ;
+true ;
+true ;
+true ;
+true ;
+true ;
+false.
+
+?- judge3.
+true ;
+true ;
+false.
+
+考察　
+　
+　まず、補助述語について説明する。
+membersはある要素がリストに含まれているか判定する述語である。
+nthはリストのn番目の述語を取り出す述語で相手が
+reverseはリストを反転させたリストを返す述語である。
+my_lengthはリストの長さを返す述語である。
+appendはリストを結合する述語である。
+takeはリストの前からn番目かの要素を含んだリストを返す述語である。
+remove_nthはリストのn番目の要素を削除したリストを返す述語である。
+insert_nthはリストのn番目に要素を挿入したリストを返す述語である。
+next_turnは次の手番を返す述語である。
+equalは2引数の要素が等しいかを判定する述語である。
+checkは盤面が第一引数の勝ち盤面かどうかを判定する述語である。
+notcheckはcheckの否定である。
+moveは手を打って盤面を次に進める述語である。
+notendは終局でないか判定する述語である。
+winとloseはスライドに書かれてあることを判定する述語である。
+winはcheckがtrueの場合はtrueを返す。それ以外の場合は
+相手の勝ち盤面でないことを判定し、かつ一手進めた盤面で相手の負け盤面
+が存在する場合にtrueを返す。
+loseは相手がcheckがtrueになる場合にtrueを返す。つまり、相手が勝ち盤面の場合にtrueを返す。
+loseは終局ではなくて、かつ一手進めた盤面で相手が勝ち盤面でないという盤面が存在するときに
+trueを返す。
+
+judgeでは全てが空の局面、つまり、開始盤面で自分も相手も必勝ではないことを問い合わせていて、
+結果としてtrueが返っている。
+
+judge1,judge2,judge3ではそれぞれスライドの局面で先手が必勝であるかを問い合わせており、いずれも
+trueが返ってくる。

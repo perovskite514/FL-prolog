@@ -1,0 +1,270 @@
+嶋村光太郎 05-211013
+
+問1　動作例 
+
+?- boodlrelative(kobo, X).
+X = kobo ;
+X = miho ;
+X = kobo ;
+X = miho ;
+X = sanae ;
+X = kobo ;
+X = miho ;
+X = sanae ;
+X = kobo ;
+X = miho ;
+false.
+
+?- boodlrelative(miho, X).
+X = kobo ;
+X = miho ;
+X = kobo ;
+X = miho ;
+X = sanae ;
+X = kobo ;
+X = miho ;
+X = sanae ;
+X = kobo ;
+X = miho ;
+false.
+
+?- boodlrelative(sanae, X).
+X = sanae ;
+X = kobo ;
+X = miho ;
+X = sanae ;
+X = kobo ;
+X = miho ;
+false.
+
+?- boodlrelative(koji, X).
+false.
+
+?- boodlrelative(sanae, kobo).
+true .
+
+?- boodlrelative(sanae, koji).
+false.
+
+考察
+　ancestorを二つ並べることで共通の祖先を持つ関係を求めている。
+動作例を見ると、kobo,miho,sanaeは血縁関係にあることが分かる。
+なお、今回はスライドでの血縁関係の定義が共通の祖先を持つことになっているため、
+スライドの仕様要件に倣った実装をした場合、kojiやsanaeの両親については祖先が存在しないため、
+boodrelative(koji, X)等とすると、結果はfalseになり、また、koboとの血縁関係も存在しない。
+koboとsanaeの両親や、koboとkojiの間が血縁関係であると定義したい場合には、ancestorの定義を
+変えて、ancestor(X, X).を追加すればよい。
+
+問2　動作例
+
+?- mult(z, s(s(s(z))), X).
+X = z.
+
+?- mult(s(s(s(z))), z, X).
+X = z.
+
+?- mult(s(s(s(z))), s(s(s(z))), X).
+X = s(s(s(s(s(s(s(s(s(z))))))))).
+
+?- mult(X, s(s(z)), s(s(s(s(z))))).
+X = s(s(z)) .
+
+?- mult(s(s(z)), Y, s(s(s(s(z))))).
+Y = s(s(z)) .
+
+?- mult(s(s(z)), Y, z).
+Y = z .
+
+?- mult(s(s(z)), s(s(z)), s(s(s(s(z))))).
+true.
+
+?- mult(s(s(z)), s(s(z)), s(s(z))).
+false.
+
+考察
+　addを利用してmultを定義した。
+まず、第一引数がzの場合は第二引数の値に関わらず、zを返す。
+その他の場合は、左辺をmult(s(X), Y, Z)と書き表せるため、
+これを(X + 1) * Y = X * Y + Yと分解して捉えて、右辺に
+multとaddを順番に記述している。
+　動作例を見ると、どの引数を変数にしても結果を返すことが分かる。
+例えば 2 * Y = 4と書いたときはY = 2を返している。
+
+問3　動作例
+
+?- reverse([1,2,3], X).
+X = [3, 2, 1].
+
+?- reverse([1,2,3,true], X).
+X = [true, 3, 2, 1].
+
+?- reverse([], X).
+X = [].
+
+?- reverse([[1]], X).
+X = [[1]].
+
+?- reverse([[1], [2,3]], X).
+X = [[2, 3], [1]].
+
+?- reverse(X, [1,2,3]).
+X = [3, 2, 1] .
+
+?- concat([[1], [2,3]], X).
+X = [1, 2, 3].
+
+?- concat([1,2,3], X).
+false.
+
+?- concat([[]], X).
+X = [].
+
+?- concat([[1]], X).
+X = [1].
+
+?- concat([[1],[2],[3]], X).
+X = [1, 2, 3].
+
+?- concat(X, [1,2,3]).
+X = [[1, 2, 3]] ;
+X = [[1, 2, 3], []] ;
+X = [[1, 2], [3]] ;
+X = [[1], [2, 3]] ;
+X = [[], [1, 2, 3]] ;
+ERROR: Out of global stack
+
+考察
+　reverseに関しては第一引数のリストの一番目の要素を取り出して、それを
+この要素を残りの要素を再帰させた結果のリストとappendしたものが第二引数であると定義している。
+　動作例を見ると、どちらの引数を変数に設定しても正しく動作することが分かる。
+　concatに関してはreverseと似た実装をしている。違いはappendの引数の順番を逆にすることで
+逆順のリストが取得されないようにすることと、reverseではappendする際に要素を[A]のようにリストの形
+にして引数として渡しているが、今回は各要素がリストであるため、引数に要素をそのまま渡してappendしている
+この要素を残りの要素を再帰させた結果のリストとappendしたものが第二引数であると定義している。　
+　動作例を見ると、まず、変数を第二引数に設定した場合は正しく動作する。
+第一引数を変数に設定した場合は考え得る可能性を全列挙した後に計算が停止せずにERROR: Out of global stackとなる。
+
+問4　動作例
+
+?- hamilton([a,b,c,d,e], [e1,e2,e3,e4,e5,e6,e7,e8,e9]).
+true ;
+false.
+
+?- hamilton([a,b,c,d,e], [e1,e2,e3,e4,e5,e6,e7,e8,e9,e10]).
+true ;
+true ;
+false.
+
+?- hamilton([a,b,c,d,e], [e1,e3,e4,e5,e7,e8]).
+false.
+
+?- hamilton([e,d,c,b,a], [e1,e3,e4,e5,e7,e8,e9]).
+true ;
+false.
+
+?- hamilton([b,c,a], [e1,e2,e10]).
+true ;
+false.
+
+?- hamilton([b,c,a], [e1,e2,e3,e4,e6,e7,e8,e9,e10]).
+true ;
+false.
+
+考察
+　まず、補助述語の仕様について説明する。membersは第二引数がリストであり、リストに第一引数の要素が含まれているか判定する関数である。
+appendはスライドの通りである。
+removeは第二引数のリストから第一引数の要素を削除したリストを第三引数である。
+続いてhamiltonについて説明する。hamiltonは頂点と辺のリストを持っている。辺はedgeとしてe1等の名前をつけて定義したものをリストとして持っている。
+hamiltonの右辺については、まず、membersを用いてVに含まれる頂点をWとして全列挙してremoveでVからWを除いたリストと共にhamilton1の引数に渡している。
+hamilton1では、第三引数がまだ使用されていない頂点のリストになっている。まず、edgeで現在の頂点から有向辺を一本辿っていける頂点を全列挙し、その後、membersで使用した辺が辺のリストに含まれているかと、有向辺の先の頂点がまだ使用されていない頂点のリストに含まれているかを判定する。
+その後、removeで使用した頂点を取り除いたリストを作成し、再びhamilton1を呼び出している。
+　全体の動作としては、使用していない頂点のみを通るように制限したグラフの探索を全頂点を始点にして行っている。また、hamilton1がtrueとなるのは
+使用していない頂点のリストが空となるときであり、これはハミルトン路を発見したことを表している。
+　動作例を見ると、ハミルトン路が存在するときにtrueが出力されている。また、trueの個数はハミルトン路の個数であり、これは
+どの頂点を始点にしたかを区別している。
+
+発展1
+　https://www.fu.is.saga-u.ac.jp/yaman/PROGRAM2/prog.pdf
+に書かれてあることを参考にする。プログラミング言語がチューリング完全である
+ことを示すには、そのプログラミング言語でチューリングマシンを実装して、実際に
+シミュレート出来ることを確認すればよい。チューリングマシンの実装には、テープの状態を
+持つ無限の配列と状態の遷移規則を記述するための条件分岐や繰り返しの機構が存在すればよい。
+なお、実際のコンピュータのメモリは有限であるが、ここでは無限であると仮定する。Prologにおいては
+リスト記法によってテープのシミュレートが可能である。また、右方向への遷移や左方向への遷移といった
+分岐は述語を用いることによって表現が可能である。stayに関しても同様にstay(tape, tape)のような状態を
+維持する述語を定義すればよいと思われる。また、prologは今回の構文の範囲で再帰的な動作も
+記述することが可能である。よって、繰り返し動作は再帰で実現すればよい。
+　実際にprologでチューリングマシンを実装した例を調べてみた。以下のような例が見つかった。
+  https://www.swi-prolog.org/pack/file_details/turing/prolog/turing.pl?show=src
+　https://cs.stackexchange.com/questions/19591/what-makes-prolog-turing-complete
+　https://github.com/RafaelPAndrade/turing-prolog/blob/master/lib/turing_base.pl
+　https://www.metalevel.at/prolog/showcases/turing.pl
+　
+　これらの実装では、基本的にリスト記法でテープや状態を表現しつつ、action等の述語を定義して
+テープの左右の移動や滞在を実装している。具体的には、
+
+　https://cs.stackexchange.com/questions/19591/what-makes-prolog-turing-complete
+での実装例
+
+　turing(Tape0, Tape) :-
+    perform(q0, [], Ls, Tape0, Rs),
+    reverse(Ls, Ls1),
+    append(Ls1, Rs, Tape).
+
+perform(qf, Ls, Ls, Rs, Rs) :- !.
+perform(Q0, Ls0, Ls, Rs0, Rs) :-
+    symbol(Rs0, Sym, RsRest),
+    once(rule(Q0, Sym, Q1, NewSym, Action)),
+    action(Action, Ls0, Ls1, [NewSym|RsRest], Rs1),
+    perform(Q1, Ls1, Ls, Rs1, Rs).
+
+symbol([], b, []).
+symbol([Sym|Rs], Sym, Rs).
+
+action(left, Ls0, Ls, Rs0, Rs) :- left(Ls0, Ls, Rs0, Rs).
+action(stay, Ls, Ls, Rs, Rs).
+action(right, Ls0, [Sym|Ls0], [Sym|Rs], Rs).
+
+left([], [], Rs0, [b|Rs0]).
+left([L|Ls], Ls, Rs, [L|Rs]).
+
+　https://www.metalevel.at/prolog/showcases/turing.pl
+での実装例
+
+   This program shows that Prolog is a Turing complete language.
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
+
+:- use_module(library(dcgs)).
+:- use_module(library(lists)).
+
+turing(Name, Tape0, Tape) :-
+        phrase(turing_(s(q0), Name), [[]-Tape0], [Ls-Rs]),
+        reverse(Ls, Ls1),
+        append(Ls1, Rs, Tape).
+
+state(S0, S), [S] --> [S0].
+
+turing_(final, _) --> [].
+turing_(s(Q0), Name) -->
+        state(Ls0-Rs0, Ls-Rs),
+        { right_symbol_rest(Rs0, Symbol0, RsRest),
+          tm(Name, Q0, Symbol0, Q, Symbol, Action),
+          action(Action, Ls0, Ls, [Symbol|RsRest], Rs) },
+        turing_(Q, Name).
+
+action(left, Ls0, Ls, Rs0, Rs) :- left(Ls0, Ls, Rs0, Rs).
+action(stay, Ls, Ls, Rs, Rs).
+action(right, Ls0, [Symbol|Ls0], [Symbol|Rs], Rs).
+
+left([], [], Rs, [b|Rs]).
+left([L|Ls], Ls, Rs, [L|Rs]).
+
+right_symbol_rest([], b, []).
+right_symbol_rest([Symbol|Rest], Symbol, Rest).
+
+　前者ではカットやonceを用いているが適切に書き換えることで今回の構文の
+範囲でのプログラムを構築することが可能であると思われる。また、後者では{}
+を用いているが、こちらも適切に書き換えることが可能であると思われる。
+
+　このように、今回のprologの構文の範囲でチューリングマシンが実装可能であることを
+示せれば、prologがチューリング完全であることを示すことが可能である。
